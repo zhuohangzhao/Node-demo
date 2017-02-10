@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>directory</title>
+    <style>
+        body{
+            width: 990px;
+            margin: 100px auto;
+            background-color: #80ebff;
+        }
+
+        a{
+            display: block;
+            line-height: 2;
+        }
+    </style>
+</head>
+<body>
+    {{#each files}}
+        <a href="{{../path}}{{this}}">{{this}}</a>
+    {{/each}}
+</body>
+</html>
