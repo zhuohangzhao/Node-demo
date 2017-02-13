@@ -9,7 +9,7 @@ const url = require('url');
 const path = require('path');
 const mime = require('./ss/mime.json');
 const handlebars = require('handlebars');
-const zlib = require("zlib");                   // 压缩     zlib.createGzip() 穿件一个Gzip压缩流
+const zlib = require("zlib");                   // 压缩
 const public_folder = path.join(__dirname,'template');   // 指定根路径  path.join(__dirname,'../','CommonJS');
 
 let server = http.createServer((req,res) => {
@@ -53,11 +53,11 @@ let server = http.createServer((req,res) => {
                 res.statusCode = 200;
                 res.setHeader('Content-type', fileType);
 
-                if (compressable && acceptEncoding.match(/\bgzip\b/)) {
+                if (compressable && /\bgzip\b/.test(acceptEncoding) ) {
                     res.setHeader('Content-Encoding', 'gzip');
                     fs.createReadStream(realPath).pipe(zlib.createGzip()).pipe(res);
 
-                } else if (compressable && acceptEncoding.match(/\ddeflate\b/)) {
+                } else if (compressable && /\bdeflate\b/.test(acceptEncoding)) {
                     res.setHeader('Content-Encoding', 'deflate');
                     fs.createReadStream(realPath).pipe(zlib.createDeflate()).pipe(res);
 

@@ -9,7 +9,7 @@ const url = require('url');
 const path = require('path');
 const mime = require('./ss/mime.json');
 const handlebars = require('handlebars');
-const zlib = require("zlib");                   // 压缩     zlib.createGzip() 穿件一个Gzip压缩流
+const zlib = require("zlib");                       // 压缩
 const public_folder = path.join(__dirname,'template');   // 指定根路径  path.join(__dirname,'../','CommonJS');
 
 let server = http.createServer((req,res) => {
@@ -18,17 +18,18 @@ let server = http.createServer((req,res) => {
 
 // 判断文件是否存在
     fs.stat(realPath,(err,stats) => {
+
         if(err){        //  判断 file or forder do not exists
             let source = fs.readFileSync('./template/404.html'),    // 同步读文件
                 template = handlebars.compile(source.toString()), // source.toString()  Buffer -> 字符串
                 data = {
                     path:url.parse(req.url).pathname
-
                 };
             res.writeHead(404,{
                 'Content-type':'text/html'
             });
             res.end(template(data));
+
         }else {
             if (stats.isDirectory()) {
                 let source = fs.readFileSync('./template/directory.html'),
@@ -55,7 +56,7 @@ let server = http.createServer((req,res) => {
 
                 if (compressable && acceptEncoding.match(/\bgzip\b/)) {
                     res.setHeader('Content-Encoding', 'gzip');
-                    fs.createReadStream(realPath).pipe(zlib.createGzip()).pipe(res);
+                    fs.createReadStream(realPath).pipe(zlib.createGzip()).pipe(res);  // zlib.createGzip() 创建一个Gzip压缩流
 
                 } else if (compressable && acceptEncoding.match(/\ddeflate\b/)) {
                     res.setHeader('Content-Encoding', 'deflate');

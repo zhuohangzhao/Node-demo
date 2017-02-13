@@ -1,7 +1,9 @@
+
 var Writable = require('stream').Writable;
-var ws = Writable();
+var ws =  Writable();
+
 ws._write = function (chunk, enc, next) {
-    console.log(chunk);
+    process.stdout.write(chunk.toString().toUpperCase());
     next();
 };
 

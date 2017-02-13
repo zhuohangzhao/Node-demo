@@ -3,12 +3,12 @@
 const http = require('http');
 const fs = require('fs');
 const url = require('url');
-const path = require('path');
-const mime = require('./ss/mime.json');
-const handlebars = require('handlebars');
-const zlib = require("zlib");                   // 压缩     zlib.createGzip() 穿件一个Gzip压缩流
-const public_folder = path.join(__dirname, 'template');   // 指定根路径  path.join(__dirname,'../','CommonJS');
-const etag = require('etag');
+const path = require('path');                   // 设置路径
+const mime = require('./ss/mime.json');         // 设置content-type，获取拓展名
+const handlebars = require('handlebars');       // 模板，代替字符串
+const zlib = require("zlib");                   // 压缩
+const public_folder = path.join(__dirname, 'template');   // 指定根路径，不让用户读到源代码，指定给用户显示的目录  path.join(__dirname,'../','CommonJS');
+const etag = require('etag');                   // etag
 
 let server = http.createServer((req, res) => {
     let pathName = url.parse(req.url).pathname,
@@ -16,9 +16,10 @@ let server = http.createServer((req, res) => {
 
 // 判断文件是否存在
     fs.stat(realPath, (err, stats) => {
-        if (err) {        //  判断 file or forder do not exists
-            let source = fs.readFileSync('./template/404.html'),    // 同步读文件
-                template = handlebars.compile(source.toString()), // source.toString()  Buffer -> 字符串
+        //  404 错误
+        if (err) {
+            let source = fs.readFileSync('./template/404.html'),
+                template = handlebars.compile(source.toString()),
                 data = {
                     path: url.parse(req.url).pathname
 
@@ -28,6 +29,7 @@ let server = http.createServer((req, res) => {
             });
             res.end(template(data));
         } else {
+            // 路径是一个文件夹
             if (stats.isDirectory()) {
                 let source = fs.readFileSync('./template/directory.html'),
                     template = handlebars.compile(source.toString()),
@@ -36,22 +38,28 @@ let server = http.createServer((req, res) => {
                         path: path.join(pathName, '/'),
                         files: []
                     };
-                data.files = fs.readdirSync(realPath); // 返回当前目录
+                data.files = fs.readdirSync(realPath);
                 res.writeHead(200, {
                     'Content-type': 'text/html'
                 });
                 res.end(template(data));
             } else {
+
+                // 设置文件拓展名（json js css ...）
                 let extension = path.extname(pathName).replace('.', ''),
                     fileType = mime[extension] || 'text/plain';
-                let acceptEncoding = req.headers['accept-encoding'] || '',  // 获取浏览器支持压缩格式
+
+                // 获取浏览器支持压缩格式
+                let acceptEncoding = req.headers['accept-encoding'] || '',
                     compressable = extension.match(/css|js|html|json|xml|txt|md|jpg|jpeg|gif|pdf/ig),
                     cacheable = extension.match(/^(css|js|jpg|png|gif)$/);
 
                 res.statusCode = 200;
                 res.setHeader('Content-type', fileType);
-                res.setHeader('Date', (new Date()).toUTCString());  // 报文生成的UTC时间
 
+                // 报文生成的UTC时间
+                res.setHeader('Date', (new Date()).toUTCString());
+                // 缓存
                 if (cacheable) {
                     let expires = new Date();
                     expires.setTime(expires.getTime() + 1000 * 60 * 60 * 24 * 365); // 一年后实效
@@ -68,6 +76,7 @@ let server = http.createServer((req, res) => {
                     }
                 }
 
+                // 压缩    zlib.createGzip() 创建一个Gzip压缩流
                 if (compressable && acceptEncoding.match(/\bgzip\b/)) {
                     res.setHeader('Content-Encoding', 'gzip');
                     fs.createReadStream(realPath).pipe(zlib.createGzip()).pipe(res);
