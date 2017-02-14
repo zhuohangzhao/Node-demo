@@ -92,4 +92,5 @@ let server = http.createServer((req, res) => {
         }
     });
 });
-server.listen(process.argv[2] || 9000);
+
+    server.listen(process.argv[2] || 9000);
